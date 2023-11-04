@@ -94,9 +94,9 @@ function init(){
 
   camera.position.z = 5
 
-  //  camera.position.z = 15
-  //  camera.position.y = 4
-  //  camera.position.x = 1
+   camera.position.z = 15
+   camera.position.y = 4
+   camera.position.x = 1
   
   // Create floor plane
 const floorGeometry = new THREE.PlaneGeometry(1000, 1000, 10, 10);
