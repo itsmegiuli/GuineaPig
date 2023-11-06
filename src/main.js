@@ -1,5 +1,6 @@
 import * as THREE from 'three'
 import { GuineaPig } from './guineaPig.js'
+import { Island } from './island.js'
 
 
 let scene
@@ -8,6 +9,7 @@ let renderer
 let directionalLight
 
 let guineaPig
+let island
 
 
 // const raycaster = new THREE.Raycaster()
@@ -81,32 +83,41 @@ function init(){
   renderer.setSize( window.innerWidth, window.innerHeight )
   document.body.appendChild( renderer.domElement )
 
-  const light = new THREE.HemisphereLight( 0xffff00, 0x0000ff, 0.1 );
+  //const light = new THREE.HemisphereLight( 0xffff00, 0x0000ff, 0.1 );
+  //scene.add( light );
+
+  // Makes dark spots brighter
+  const light = new THREE.AmbientLight( 0x707070 );
   scene.add( light );
 
+  // Directional light adjusted to skybox sun
   directionalLight = new THREE.DirectionalLight( 0xffffff, 2.5 );
-  directionalLight.position.set(-10, 10, 5)
+  directionalLight.position.set(5, 20, 10)
   scene.add( directionalLight )
 
   ///////////////////////////////////
 
   guineaPig = new GuineaPig(scene)
 
-  camera.position.z = 5
+  camera.position.z = 15
+  camera.position.y = 7
+  camera.position.x = -10
 
-   camera.position.z = 15
-   camera.position.y = 4
-   camera.position.x = 1
+  ///////////////////////////////////
+
+  // Loads island + skybox
+  island = new Island(scene)
   
+   /*
   // Create floor plane
-const floorGeometry = new THREE.PlaneGeometry(1000, 1000, 10, 10);
-const floorMaterial = new THREE.MeshBasicMaterial({ color: 0xf2be8e, side: THREE.DoubleSide });
-const floor = new THREE.Mesh(floorGeometry, floorMaterial);
-floor.rotation.x = Math.PI / 2; // Rotate the floor 90 degrees
+  const floorGeometry = new THREE.PlaneGeometry(1000, 1000, 10, 10);
+  const floorMaterial = new THREE.MeshBasicMaterial({ color: 0xf2be8e, side: THREE.DoubleSide });
+  const floor = new THREE.Mesh(floorGeometry, floorMaterial);
+  floor.rotation.x = Math.PI / 2; // Rotate the floor 90 degrees
 
-// Add the floor to the scene
-floor.position.set(0,-1,0)
-scene.add(floor);
+  // Add the floor to the scene
+  floor.position.set(0,-1,0)
+  scene.add(floor);*/
 
 }
 
@@ -118,10 +129,10 @@ function animate() {
 
 	renderer.render( scene, camera )
 
-  // if(guineaPig.isLoaded){
-  //   camera.lookAt(guineaPig.guineaPig.position)
-  //   guineaPig.animate()
-  // }
+   if(guineaPig.isLoaded){
+     camera.lookAt(guineaPig.guineaPig.position)
+     guineaPig.animate()
+   }
   directionalLight.position.x += 0.02
 
 }

@@ -66,6 +66,14 @@ class GuineaPig{
   loadGuineaPig(){
     const loader = new GLTFLoader()
     loader.load('./assets/3d/bunny.glb', (gltf) => {
+
+      gltf.scene.traverse(function (child) {
+        if (child.isMesh) {
+            child.castShadow = true;
+            child.receiveShadow = true;
+        }
+      });
+
       this.guineaPig = gltf.scene
       //this.guineaPig.rotation.y -= Math.PI/4
       this.rotation = this.guineaPig.rotation.y
