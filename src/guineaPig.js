@@ -6,7 +6,7 @@ import * as CSS2DRenderer from 'CSS2DRenderer'
 
 class GuineaPig{
 
-  constructor(scene, island){
+  constructor(scene, island, _onLoadCallbackfunction){
     this.steeringType = "smooth"
     this.isLoaded = false
     this.guineaPig
@@ -18,7 +18,9 @@ class GuineaPig{
     this.angle = 0
     this.rotation
     this.island = island
-    this.loadGuineaPig()
+    this.nameDiv = null
+    this.nameLabel = null
+    this.loadGuineaPig(_onLoadCallbackfunction)
     
   }
 
@@ -102,7 +104,13 @@ class GuineaPig{
 
 }
 
-loadGuineaPig(){
+addLabel (label) {
+  this.guineaPig.add(label);
+}
+
+
+
+loadGuineaPig(_onLoadCallbackfunction){
     const loader = new GLTFLoader()
     loader.load('./assets/3d/bunny.glb', (gltf) => {
 
@@ -121,17 +129,9 @@ loadGuineaPig(){
       this.scene.add(this.guineaPig)
       this.isLoaded = true
 
+      if (_onLoadCallbackfunction != undefined)
+      _onLoadCallbackfunction(this);
 
-      //Nametag
-    var nameDiv = document.createElement( 'div' );
-    nameDiv.className = 'label';
-    nameDiv.textContent = 'guineapig';
-    nameDiv.style.backgroundColor = 'transparent';
-  
-    var nameLabel = new CSS2DRenderer.CSS2DObject( nameDiv );
-    nameLabel.position.set( 0, 6, 0 );
-    nameLabel.center.set( 0.5, 0.5 );
-    this.guineaPig.add( nameLabel );
     })
 
 

@@ -13,11 +13,16 @@ let labelRenderer
 let directionalLight
 
 let island
-let guineaPig
+let guineaPig = {}
 let player
 
+const positionScreenSpace = new THREE.Vector3();
+const threshold = 0.2;
+const interractables = [];
 init()
-animate() 
+//animate() 
+
+
 
 window.addEventListener("resize", (event) => {
   camera.aspect = window.innerWidth / window.innerHeight
@@ -28,6 +33,7 @@ window.addEventListener("resize", (event) => {
 window.addEventListener("click", async () => {
   await renderer.domElement.requestPointerLock();
 });
+
 
 
 document.addEventListener('keydown',(event) => {
@@ -55,17 +61,12 @@ document.addEventListener('keyup',(event) => {
   } 
 })
 
-
-
-
-
 function onWindowResize(event){
   camera.aspect = window.innerWidth / window.innerHeight
   camera.updateProjectionMatrix()
   renderer.setSize( window.innerWidth, window.innerHeight )
   labelRenderer.setSize( window.innerWidth, window.innerHeight )
 }
-
 
 function init(){
 
@@ -92,9 +93,8 @@ function init(){
 
   island = new Island(scene)
   console.log("island")
-  guineaPig = new GuineaPig(scene, island)
-  console.log("guineapig")
-
+  guineaPig = new GuineaPig(scene, island, OnLoadGuineaPigLoaded)
+  
   camera.position.z = 15
   camera.position.y = 7
   camera.position.x = -10
@@ -110,8 +110,32 @@ function init(){
   labelRenderer.domElement.style.top = '0px';
   document.body.appendChild( labelRenderer.domElement );
 
-
+  ///////////////////////////////////
+  
 }
+
+function OnLoadGuineaPigLoaded (obj){
+
+  //Nametag
+  guineaPig.nameDiv = document.createElement( 'div' );
+  guineaPig.nameDiv.className = 'label';
+  guineaPig.nameDiv.textContent = 'guineapig';
+  guineaPig.nameDiv.style.backgroundColor = 'transparent';
+
+  guineaPig.nameLabel = new CSS2DRenderer.CSS2DObject( guineaPig.nameDiv );
+  guineaPig.nameLabel.position.set( 0, 6, 0 );
+  guineaPig.nameLabel.center.set( 0.5, 0.5 );
+  guineaPig.nameLabel.visible = false;
+
+  console.log(guineaPig,  guineaPig.guineaPig);
+  guineaPig.addLabel( guineaPig.nameLabel );
+
+  interractables.push(guineaPig.guineaPig);
+  console.log("guineapig", guineaPig)
+  animate()
+}
+
+
 
 function animate() {
 	requestAnimationFrame( animate )
@@ -124,7 +148,30 @@ function animate() {
 
   if (player.isLoaded)
     player.animate()
+    
+  for(var i = 0; i< interractables.length; i++){
+    positionScreenSpace.copy(interractables[i].position).project(camera);
+    positionScreenSpace.setZ(0);
+    console.log(camera.position.distanceTo(interractables[i].position))
+    if(positionScreenSpace.length() < threshold && camera.position.distanceTo(interractables[i].position) < 10){
+      interract(interractables[i])
+    }
+  }
+}
 
+
+function interract(object){
+  document.addEventListener('keydown',(event) => {
+    const key = event.key
+    if(key == 'e'){
+      switch(object){
+        case guineaPig.guineaPig:
+          guineaPig.nameLabel.visible = true;
+          setTimeout(function(){guineaPig.nameLabel.visible = false}, 5000);
+          break;
+      }
+    }
+  })
 }
 
 
