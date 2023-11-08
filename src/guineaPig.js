@@ -2,7 +2,7 @@ import * as THREE from 'three'
 
 
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js'
-
+import * as CSS2DRenderer from 'CSS2DRenderer'
 
 class GuineaPig{
 
@@ -99,11 +99,7 @@ class GuineaPig{
   
     }
 
-    
-    
-    
 
-  
 }
 
 loadGuineaPig(){
@@ -124,7 +120,21 @@ loadGuineaPig(){
       this.guineaPig.scale.set(0.5, 0.5, 0.5)
       this.scene.add(this.guineaPig)
       this.isLoaded = true
+
+
+      //Nametag
+    var nameDiv = document.createElement( 'div' );
+    nameDiv.className = 'label';
+    nameDiv.textContent = 'guineapig';
+    nameDiv.style.backgroundColor = 'transparent';
+  
+    var nameLabel = new CSS2DRenderer.CSS2DObject( nameDiv );
+    nameLabel.position.set( 0, 6, 0 );
+    nameLabel.center.set( 0.5, 0.5 );
+    this.guineaPig.add( nameLabel );
     })
+
+
   }
 }
 

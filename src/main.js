@@ -1,11 +1,12 @@
 import * as THREE from 'three'
 import { GuineaPig } from './guineaPig.js'
 import { Island } from './island.js'
-
+import * as CSS2DRenderer from 'CSS2DRenderer'
 
 let scene
 let camera
 let renderer
+let labelRenderer
 let directionalLight
 
 let island
@@ -74,6 +75,7 @@ function onWindowResize(event){
   camera.aspect = window.innerWidth / window.innerHeight
   camera.updateProjectionMatrix()
   renderer.setSize( window.innerWidth, window.innerHeight )
+  labelRenderer.setSize( window.innerWidth, window.innerHeight )
 }
 
 function init(){
@@ -111,8 +113,14 @@ function init(){
 
   ///////////////////////////////////
 
-  
-  
+  labelRenderer = new CSS2DRenderer.CSS2DRenderer();
+  labelRenderer.setSize( window.innerWidth, window.innerHeight );
+  labelRenderer.domElement.style.position = 'absolute';
+  labelRenderer.domElement.style.top = '0px';
+  document.body.appendChild( labelRenderer.domElement );
+
+  ///////////////////////////////////
+
    /*
   // Create floor plane
   const floorGeometry = new THREE.PlaneGeometry(1000, 1000, 10, 10);
@@ -133,6 +141,7 @@ function animate() {
 
 
 	renderer.render( scene, camera )
+  labelRenderer.render( scene, camera )
 
    if(guineaPig.isLoaded){
      camera.lookAt(guineaPig.guineaPig.position)
