@@ -1,7 +1,7 @@
 import * as THREE from 'three'
 import { GuineaPig } from './guineaPig.js'
 import { Island } from './island.js'
-
+import { Player } from './player.js'
 
 let scene
 let camera
@@ -10,36 +10,21 @@ let directionalLight
 
 let island
 let guineaPig
-
-
-
-// const raycaster = new THREE.Raycaster()
-const pointer = new THREE.Vector2()
+let player
 
 init()
-
 animate() 
 
-function onPointerMove( event ) {
-	pointer.x = ( event.clientX / window.innerWidth ) * 2 - 1
-	pointer.y = - ( event.clientY / window.innerHeight ) * 2 + 1
-  //console.log(event.clientX, event.clientY, pointer.x, pointer.y)
-  //deselectAll()
-  //raycast(true)
-}
-function onPointerDown( event ) {
-  pointer.x = ( event.clientX / window.innerWidth ) * 2 - 1
-	pointer.y = - ( event.clientY / window.innerHeight ) * 2 + 1
-  //raycast(false)
-}
+window.addEventListener("resize", (event) => {
+  camera.aspect = window.innerWidth / window.innerHeight
+  camera.updateProjectionMatrix()
+  renderer.setSize( window.innerWidth, window.innerHeight )
+})
 
-window.addEventListener( 'pointermove', onPointerMove )
-window.addEventListener( 'pointerdown', onPointerDown )
+window.addEventListener("click", async () => {
+  await renderer.domElement.requestPointerLock();
+});
 
-
-
-
-window.addEventListener("resize", onWindowResize)
 
 document.addEventListener('keydown',(event) => {
   const key = event.key
@@ -53,7 +38,6 @@ document.addEventListener('keydown',(event) => {
     guineaPig.steerRight()
   } 
 })
-
 document.addEventListener('keyup',(event) => {
   const key = event.key
   if(key == 'w'){
@@ -66,15 +50,6 @@ document.addEventListener('keyup',(event) => {
     guineaPig.releaseSteer()
   } 
 })
-
-
-
-
-function onWindowResize(event){
-  camera.aspect = window.innerWidth / window.innerHeight
-  camera.updateProjectionMatrix()
-  renderer.setSize( window.innerWidth, window.innerHeight )
-}
 
 function init(){
 
@@ -104,41 +79,28 @@ function init(){
   guineaPig = new GuineaPig(scene, island)
   console.log("guineapig")
 
-
   camera.position.z = 15
   camera.position.y = 7
   camera.position.x = -10
 
   ///////////////////////////////////
+  //Player
+  player = new Player(camera)
 
-  
-  
-   /*
-  // Create floor plane
-  const floorGeometry = new THREE.PlaneGeometry(1000, 1000, 10, 10);
-  const floorMaterial = new THREE.MeshBasicMaterial({ color: 0xf2be8e, side: THREE.DoubleSide });
-  const floor = new THREE.Mesh(floorGeometry, floorMaterial);
-  floor.rotation.x = Math.PI / 2; // Rotate the floor 90 degrees
-
-  // Add the floor to the scene
-  floor.position.set(0,-1,0)
-  scene.add(floor);*/
+  ///////////////////////////////////
 
 }
 
-
 function animate() {
 	requestAnimationFrame( animate )
-
-
-
 	renderer.render( scene, camera )
 
-   if(guineaPig.isLoaded){
-     camera.lookAt(guineaPig.guineaPig.position)
-     guineaPig.animate()
-   }
-  directionalLight.position.x += 0.02
+  if(guineaPig.isLoaded){
+    guineaPig.animate()
+  }
+
+  if (player.isLoaded)
+    player.animate()
 
 }
 
