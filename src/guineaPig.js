@@ -1,8 +1,12 @@
+import * as THREE from 'three'
+
+
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js'
+
 
 class GuineaPig{
 
-  constructor(scene){
+  constructor(scene, island){
     this.steeringType = "smooth"
     this.isLoaded = false
     this.guineaPig
@@ -13,7 +17,9 @@ class GuineaPig{
     this.speedTo = 0
     this.angle = 0
     this.rotation
+    this.island = island
     this.loadGuineaPig()
+    
   }
 
   accelerate(){
@@ -45,9 +51,13 @@ class GuineaPig{
     this.speed += (this.speedTo - this.speed) / 10 * 0.1
     const dx = Math.sin(this.angle) * this.speed
     const dz = Math.cos(this.angle) * this.speed
+
+    //updates the guinea pig position
     this.guineaPig.position.x += dx
     this.guineaPig.position.z += dz
-    
+
+
+
     // STEERING
     this.angle += -this.steer * this.speed * 0.1
     this.guineaPig.rotation.y = this.rotation + this.angle
@@ -61,15 +71,49 @@ class GuineaPig{
     }else{
       this.steer += (this.steerTo - this.steer) / 10
     }
-  }
 
-  loadGuineaPig(){
+/*
+    if (this.guineaPig instanceof THREE.Object3D) {
+      console.log("yes")
+    } else {
+      console.log("no")
+    }
+
+    if (this.island.island instanceof THREE.Object3D) {
+      console.log("yes")
+    } else {
+      console.log("no")
+    }
+    */
+
+    if (this.guineaPig && this.island.island) {
+      const islandBoundingBox = new THREE.Box3().setFromObject(this.island.island);
+    
+      const guineaPigBoundingBox = new THREE.Box3().setFromObject(this.guineaPig);
+
+      if (!islandBoundingBox.intersectsBox(guineaPigBoundingBox)) {
+        console.log("outside the island")
+
+      }
+
+  
+    }
+
+    
+    
+    
+
+  
+}
+
+loadGuineaPig(){
     const loader = new GLTFLoader()
     loader.load('./assets/3d/bunny.glb', (gltf) => {
 
       gltf.scene.traverse(function (child) {
         if (child.isMesh) {
             child.castShadow = true;
+
             child.receiveShadow = true;
         }
       });

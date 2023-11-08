@@ -8,15 +8,17 @@ let camera
 let renderer
 let directionalLight
 
-let guineaPig
 let island
+let guineaPig
+
 
 
 // const raycaster = new THREE.Raycaster()
 const pointer = new THREE.Vector2()
 
 init()
-animate()
+
+animate() 
 
 function onPointerMove( event ) {
 	pointer.x = ( event.clientX / window.innerWidth ) * 2 - 1
@@ -97,7 +99,11 @@ function init(){
 
   ///////////////////////////////////
 
-  guineaPig = new GuineaPig(scene)
+  island = new Island(scene)
+  console.log("island")
+  guineaPig = new GuineaPig(scene, island)
+  console.log("guineapig")
+
 
   camera.position.z = 15
   camera.position.y = 7
@@ -105,8 +111,7 @@ function init(){
 
   ///////////////////////////////////
 
-  // Loads island + skybox
-  island = new Island(scene)
+  
   
    /*
   // Create floor plane
