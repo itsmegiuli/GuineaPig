@@ -11,6 +11,8 @@ let camera
 let renderer
 let labelRenderer
 let directionalLight
+let interactDiv
+let interactLabel
 
 let island
 let guineaPig = {}
@@ -18,7 +20,7 @@ let player
 
 const positionScreenSpace = new THREE.Vector3();
 const threshold = 0.2;
-const interractables = [];
+const interactables = [];
 init()
 //animate() 
 
@@ -112,6 +114,15 @@ function init(){
 
   ///////////////////////////////////
   
+  interactDiv = document.createElement( 'div' );
+  interactDiv.className = 'label';
+  interactDiv.textContent = 'E';
+  interactDiv.style.backgroundColor = 'transparent';
+
+  interactLabel = new CSS2DRenderer.CSS2DObject( interactDiv );
+  interactLabel.position.set( 0, 4, 0 );
+  interactLabel.center.set( 0.5, 0.5 );
+
 }
 
 function OnLoadGuineaPigLoaded (obj){
@@ -130,7 +141,7 @@ function OnLoadGuineaPigLoaded (obj){
   console.log(guineaPig,  guineaPig.guineaPig);
   guineaPig.addLabel( guineaPig.nameLabel );
 
-  interractables.push(guineaPig.guineaPig);
+  interactables.push(guineaPig.guineaPig);
   console.log("guineapig", guineaPig)
   animate()
 }
@@ -149,18 +160,25 @@ function animate() {
   if (player.isLoaded)
     player.animate()
     
-  for(var i = 0; i< interractables.length; i++){
-    positionScreenSpace.copy(interractables[i].position).project(camera);
+  for(var i = 0; i< interactables.length; i++){
+    positionScreenSpace.copy(interactables[i].position).project(camera);
     positionScreenSpace.setZ(0);
-    console.log(camera.position.distanceTo(interractables[i].position))
-    if(positionScreenSpace.length() < threshold && camera.position.distanceTo(interractables[i].position) < 10){
-      interract(interractables[i])
+    console.log(interactLabel.parent)
+    if(positionScreenSpace.length() < threshold && camera.position.distanceTo(interactables[i].position) < 10){
+      if(interactLabel.parent != interactables[i]){
+        interactables[i].add(interactLabel);
+      }
+      interactLabel.visible = true;
+      interact(interactables[i])
+    }
+    else if(interactLabel.parent == interactables[i] && (positionScreenSpace.length() > threshold || camera.position.distanceTo(interactables[i].position) > 10)){
+      interactLabel.visible = false;
     }
   }
 }
 
 
-function interract(object){
+function interact(object){
   document.addEventListener('keydown',(event) => {
     const key = event.key
     if(key == 'e'){
@@ -168,6 +186,8 @@ function interract(object){
         case guineaPig.guineaPig:
           guineaPig.nameLabel.visible = true;
           setTimeout(function(){guineaPig.nameLabel.visible = false}, 5000);
+          break;
+        case cauldron:
           break;
       }
     }
