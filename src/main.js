@@ -13,14 +13,20 @@ let labelRenderer
 let directionalLight
 let interactDiv
 let interactLabel
+let interactedObject
+let iterator = -1
 
 let island
 let guineaPig = {}
 let player
+let interactIsActive = false;
 
 const positionScreenSpace = new THREE.Vector3();
 const threshold = 0.2;
 const interactables = [];
+
+const object = new THREE.Mesh(new THREE.BoxGeometry(), new THREE.MeshBasicMaterial({ color: 0x00ff00 }));
+var isHeld = false;
 init()
 //animate() 
 
@@ -49,7 +55,38 @@ document.addEventListener('keydown',(event) => {
   }else if(key == 'd'){
     guineaPig.steerRight()
   } 
+  if (interactIsActive) {
+    if(key == 'e'){
+      switch(interactedObject){
+        case guineaPig.guineaPig:
+          console.log("e");
+          guineaPig.nameLabel.visible = true;
+          setTimeout(function(){guineaPig.nameLabel.visible = false}, 5000);
+          break;
+        // case cauldron:
+        //   break;
+      }
+    }
+  }
+    if(key == 'f'){
+      if (interactIsActive){
+        if (player.heldItem == null){
+          console.log("rotation",interactables[iterator].rotation);
+          player.heldItem = interactables[iterator];
+          player.heldItemData = [interactables[iterator].position.y, new THREE.Euler(interactables[iterator].rotation.x,interactables[iterator].rotation.y,interactables[iterator].rotation.z)];
+          camera.lookAt(interactedObject.position);
+        }
+      }
+      else if(interactables[iterator] == player.heldItem && iterator != -1){
+          console.log("inter...",interactables[iterator].rotation);
+          player.heldItem = null
+          interactables[iterator].position.y = player.heldItemData[0];
+          interactables[iterator].rotation.copy(player.heldItemData[1]);
+        } 
+    }
+  
 })
+
 document.addEventListener('keyup',(event) => {
   const key = event.key
   if(key == 'w'){
@@ -143,6 +180,11 @@ function OnLoadGuineaPigLoaded (obj){
 
   interactables.push(guineaPig.guineaPig);
   console.log("guineapig", guineaPig)
+  
+  scene.add(object); 
+  interactables.push(object);
+  object.position.set(-1, 3, -5);
+  camera.lookAt(object.position);
   animate()
 }
 
@@ -159,39 +201,37 @@ function animate() {
 
   if (player.isLoaded)
     player.animate()
-    
+   
+  intercept()
+
+  if(player.heldItem != null){
+    player.itemPickup();
+  }
+}
+
+function intercept(){
   for(var i = 0; i< interactables.length; i++){
     positionScreenSpace.copy(interactables[i].position).project(camera);
     positionScreenSpace.setZ(0);
-    console.log(interactLabel.parent)
     if(positionScreenSpace.length() < threshold && camera.position.distanceTo(interactables[i].position) < 10){
       if(interactLabel.parent != interactables[i]){
         interactables[i].add(interactLabel);
       }
       interactLabel.visible = true;
-      interact(interactables[i])
+      interactIsActive = true;
+      interactedObject =interactables[i];
+      iterator = i; 
     }
-    else if(interactLabel.parent == interactables[i] && (positionScreenSpace.length() > threshold || camera.position.distanceTo(interactables[i].position) > 10)){
-      interactLabel.visible = false;
+    else {
+      if(interactLabel.parent == interactables[i] && (positionScreenSpace.length() > threshold || camera.position.distanceTo(interactables[i].position) > 10)){
+        interactLabel.visible = false;
+      }
+      if (interactIsActive && i == iterator) {
+        interactIsActive = false;
+      }
     }
   }
 }
 
-
-function interact(object){
-  document.addEventListener('keydown',(event) => {
-    const key = event.key
-    if(key == 'e'){
-      switch(object){
-        case guineaPig.guineaPig:
-          guineaPig.nameLabel.visible = true;
-          setTimeout(function(){guineaPig.nameLabel.visible = false}, 5000);
-          break;
-        case cauldron:
-          break;
-      }
-    }
-  })
-}
 
 

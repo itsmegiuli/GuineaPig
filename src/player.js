@@ -17,6 +17,8 @@ class Player{
     this.offset.copy(cam.position)
     this.movementSpeed = 0.2
     this.rotationSpeed = 0.6
+    this.heldItem = null
+    this.heldItemData = null
     this.load(window)
   }
 
@@ -76,9 +78,9 @@ class Player{
     this.cam.position.copy(newPos)
   }
 
-load(){
-  window.addEventListener( 'pointermove', (event) => this.onPointerMove(event, this) )
-  document.addEventListener('keydown',(event) => {
+  load(){
+    window.addEventListener( 'pointermove', (event) => this.onPointerMove(event, this) )
+    document.addEventListener('keydown',(event) => {
       const key = event.key
       if(key == 'w'){
         this.moveDelta.z = 1
@@ -107,6 +109,15 @@ load(){
       } 
     })
     this.isLoaded = true
+  }
+  
+  itemPickup(){
+    const itemForward = new THREE.Vector3(0, 0, -1).applyQuaternion(this.cam.quaternion);
+    const itemRight = new THREE.Vector3(1, 0, 0).applyQuaternion(this.cam.quaternion);
+    const itemDown = new THREE.Vector3(0, -1, 0).applyQuaternion(this.cam.quaternion);
+    const newPosition = this.cam.position.clone().add(itemForward.multiplyScalar(3).add(itemRight.multiplyScalar(2)).add(itemDown.multiplyScalar(1)));
+    this.heldItem.position.copy(newPosition);
+    this.heldItem.rotation.copy(this.cam.rotation);
   }
 }
 
