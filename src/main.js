@@ -5,6 +5,7 @@ import { Island } from './island.js'
 import * as CSS2DRenderer from 'CSS2DRenderer'
 
 import { Player } from './player.js'
+import { RawFood } from './rawFood.js'
 
 let scene
 let camera
@@ -19,14 +20,18 @@ let iterator = -1
 let island
 let guineaPig = {}
 let player
-let interactIsActive = false;
+let interactIsActive = false
+let rawFood = undefined
 
 const positionScreenSpace = new THREE.Vector3();
 const threshold = 0.2;
 const interactables = [];
+const immovables = [];
 
 const object = new THREE.Mesh(new THREE.BoxGeometry(), new THREE.MeshBasicMaterial({ color: 0x00ff00 }));
-var isHeld = false;
+const cauldron = new THREE.Mesh(new THREE.BoxGeometry(), new THREE.MeshBasicMaterial({ color: 0x00ff00 }));
+const crops = new THREE.Mesh(new THREE.BoxGeometry(), new THREE.MeshBasicMaterial({ color: 0x00ff00 }));
+
 init()
 //animate() 
 
@@ -36,6 +41,7 @@ window.addEventListener("resize", (event) => {
   camera.aspect = window.innerWidth / window.innerHeight
   camera.updateProjectionMatrix()
   renderer.setSize( window.innerWidth, window.innerHeight )
+  labelRenderer.setSize( window.innerWidth, window.innerHeight )
 })
 
 window.addEventListener("click", async () => {
@@ -63,26 +69,49 @@ document.addEventListener('keydown',(event) => {
           guineaPig.nameLabel.visible = true;
           setTimeout(function(){guineaPig.nameLabel.visible = false}, 5000);
           break;
-        // case cauldron:
-        //   break;
+        case crops:
+          if(player.heldItem == null){
+          rawFood = new RawFood(scene, OnLoadRawMeatLoaded);
+          }
+          break;
       }
     }
   }
     if(key == 'f'){
-      if (interactIsActive){
-        if (player.heldItem == null){
-          console.log("rotation",interactables[iterator].rotation);
-          player.heldItem = interactables[iterator];
-          player.heldItemData = [interactables[iterator].position.y, new THREE.Euler(interactables[iterator].rotation.x,interactables[iterator].rotation.y,interactables[iterator].rotation.z)];
-          camera.lookAt(interactedObject.position);
+      if(player.heldItem != null){
+        if(rawFood != undefined){
+          var isMember = false;
+          for(var i = 0; i <interactables.length;i++){
+            if(interactables[i] == rawFood.rawFood){
+              isMember = true;
+              break;
+            }
+          }
+          if(isMember == false && player.heldItem == rawFood.rawFood){
+            interactables.push(rawFood.rawFood);
+          }
+        }
+        player.heldItem.position.y = player.heldItemData[0];
+        player.heldItem.rotation.copy(player.heldItemData[1]);
+        player.heldItem = null
+        
+      } 
+      else{
+        if (interactIsActive){
+          var isMovable = true;
+          for(var i = 0; i< immovables.length; i++){
+            if(interactables[iterator] == immovables[i]){
+              isMovable = false;
+            }
+          }
+          if(isMovable){
+            console.log("rotation",interactables[iterator].rotation);
+            player.heldItem = interactables[iterator];
+            player.heldItemData = [interactables[iterator].position.y, new THREE.Euler(interactables[iterator].rotation.x,interactables[iterator].rotation.y,interactables[iterator].rotation.z)];
+            camera.lookAt(interactedObject.position);
+          }
         }
       }
-      else if(interactables[iterator] == player.heldItem && iterator != -1){
-          console.log("inter...",interactables[iterator].rotation);
-          player.heldItem = null
-          interactables[iterator].position.y = player.heldItemData[0];
-          interactables[iterator].rotation.copy(player.heldItemData[1]);
-        } 
     }
   
 })
@@ -99,13 +128,6 @@ document.addEventListener('keyup',(event) => {
     guineaPig.releaseSteer()
   } 
 })
-
-function onWindowResize(event){
-  camera.aspect = window.innerWidth / window.innerHeight
-  camera.updateProjectionMatrix()
-  renderer.setSize( window.innerWidth, window.innerHeight )
-  labelRenderer.setSize( window.innerWidth, window.innerHeight )
-}
 
 function init(){
 
@@ -130,7 +152,7 @@ function init(){
 
   ///////////////////////////////////
 
-  island = new Island(scene)
+  island = new Island(scene/*,OnLoadIslandLoaded*/)
   console.log("island")
   guineaPig = new GuineaPig(scene, island, OnLoadGuineaPigLoaded)
   
@@ -141,8 +163,8 @@ function init(){
   ///////////////////////////////////
   //Player
   player = new Player(camera)
-
-
+  ///////////////////////////////////
+  
   labelRenderer = new CSS2DRenderer.CSS2DRenderer();
   labelRenderer.setSize( window.innerWidth, window.innerHeight );
   labelRenderer.domElement.style.position = 'absolute';
@@ -157,13 +179,45 @@ function init(){
   interactDiv.style.backgroundColor = 'transparent';
 
   interactLabel = new CSS2DRenderer.CSS2DObject( interactDiv );
-  interactLabel.position.set( 0, 4, 0 );
+  interactLabel.position.set( 0, 3, 0 );
   interactLabel.center.set( 0.5, 0.5 );
+
+  ///////////////////////////////////
+  //Cauldron
+  scene.add(cauldron);
+  interactables.push(cauldron);
+  immovables.push(cauldron);
+  cauldron.position.set(-21.45, 3.6, -32.5);
+  cauldron.scale.set(4,3,4);
+  cauldron.name = "cauldron";
+  cauldron.visible = false;
+
+  ///////////////////////////////////
+  //crops
+  crops.position.set(7.4 , 5, -4.5);
+  crops.scale.set(20, 7, 8);
+  scene.add(crops); 
+  interactables.push(crops);
+  immovables.push(crops);
+  crops.name = "crops";
+  crops.visible = false;
+
+}
+
+function OnLoadRawMeatLoaded(obj){
+  rawFood.position = [0,0,0];
+  player.heldItem = rawFood.rawFood;
+  player.heldItemData = [0.5,new THREE.Euler(0,0,0)];
+  camera.lookAt(rawFood.rawFood.position);
+  /*var meatName = "rawFood";
+  eval('var ' + meatName + rawFoods.length + ' = new RawFood(scene);');
+  eval(meatName + rawFoods.length + '.push(interactables);');
+  eval(meatName + rawFoods.length + '.push(rawMeats);');
+  eval('player.heldItem = '+ meatName + rawFoods.length);*/
 
 }
 
 function OnLoadGuineaPigLoaded (obj){
-
   //Nametag
   guineaPig.nameDiv = document.createElement( 'div' );
   guineaPig.nameDiv.className = 'label';
@@ -184,11 +238,8 @@ function OnLoadGuineaPigLoaded (obj){
   scene.add(object); 
   interactables.push(object);
   object.position.set(-1, 3, -5);
-  camera.lookAt(object.position);
   animate()
 }
-
-
 
 function animate() {
 	requestAnimationFrame( animate )
@@ -201,7 +252,7 @@ function animate() {
 
   if (player.isLoaded)
     player.animate()
-   
+
   intercept()
 
   if(player.heldItem != null){
@@ -230,8 +281,6 @@ function intercept(){
         interactIsActive = false;
       }
     }
+    //console.log("interactIsActive", interactIsActive);
   }
 }
-
-
-
