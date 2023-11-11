@@ -23,6 +23,7 @@ let player
 let interactIsActive = false
 let rawFood = undefined
 
+
 const positionScreenSpace = new THREE.Vector3();
 const threshold = 0.2;
 const interactables = [];
@@ -50,17 +51,20 @@ window.addEventListener("click", async () => {
 
 
 
+
 document.addEventListener('keydown',(event) => {
   const key = event.key
+  /*
   if(key == 'w'){
     guineaPig.accelerate()
-  }else if(key == 'a'){
-    guineaPig.steerLeft()
-  }else if(key == 's'){
-    guineaPig.reverse()
-  }else if(key == 'd'){
-    guineaPig.steerRight()
-  } 
+ }else if(key == 'a'){
+   guineaPig.steerLeft()
+ }else if(key == 's'){
+   guineaPig.reverse()
+ }else if(key == 'd'){
+   guineaPig.steerRight()
+ } 
+ */
   if (interactIsActive) {
     if(key == 'e'){
       switch(interactedObject){
@@ -202,6 +206,9 @@ function init(){
   crops.name = "crops";
   crops.visible = false;
 
+
+ 
+
 }
 
 function OnLoadRawMeatLoaded(obj){
@@ -238,8 +245,11 @@ function OnLoadGuineaPigLoaded (obj){
   scene.add(object); 
   interactables.push(object);
   object.position.set(-1, 3, -5);
+  
   animate()
+
 }
+
 
 function animate() {
 	requestAnimationFrame( animate )
@@ -248,6 +258,8 @@ function animate() {
 
   if(guineaPig.isLoaded){
     guineaPig.animate()
+    guineaPig.randomMovement()
+
   }
 
   if (player.isLoaded)
@@ -259,6 +271,7 @@ function animate() {
     player.itemPickup();
   }
 }
+
 
 function intercept(){
   for(var i = 0; i< interactables.length; i++){

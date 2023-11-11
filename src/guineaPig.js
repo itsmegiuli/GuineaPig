@@ -21,6 +21,9 @@ class GuineaPig{
     this.nameDiv = null
     this.nameLabel = null
     this.loadGuineaPig(_onLoadCallbackfunction)
+    this.isStopped = false
+    this.newX
+    this.NewZ
     
   }
 
@@ -38,10 +41,12 @@ class GuineaPig{
 
   steerLeft(){
     this.steerTo = -1
+    console.log("left")
   }
 
   steerRight(){
     this.steerTo = 1
+    console.log("right")
   }
 
   releaseSteer(){
@@ -54,11 +59,12 @@ class GuineaPig{
     const dx = Math.sin(this.angle) * this.speed
     const dz = Math.cos(this.angle) * this.speed
 
-    //updates the guinea pig position
-    this.guineaPig.position.x += dx
-    this.guineaPig.position.z += dz
+    //saves the guinea pig position
+    this.newX = this.guineaPig.position.x += dx
+    this.newZ = this.guineaPig.position.z += dz
 
 
+    
 
     // STEERING
     this.angle += -this.steer * this.speed * 0.1
@@ -74,32 +80,104 @@ class GuineaPig{
       this.steer += (this.steerTo - this.steer) / 10
     }
 
-/*
-    if (this.guineaPig instanceof THREE.Object3D) {
-      console.log("yes")
-    } else {
-      console.log("no")
-    }
 
-    if (this.island.island instanceof THREE.Object3D) {
-      console.log("yes")
-    } else {
-      console.log("no")
-    }
-    */
-
+  
     if (this.guineaPig && this.island.island) {
       const islandBoundingBox = new THREE.Box3().setFromObject(this.island.island);
+      const size = new THREE.Vector3();
+      islandBoundingBox.getSize(size);
+      
+
+      // Mesh to visually check bounding box //delete
+      const islandBoundingBoxMesh = new THREE.Mesh(
+      new THREE.SphereGeometry(size.x*0.4,32,32),
+      new THREE.MeshBasicMaterial({ color: 0xff0000, wireframe: true })
+      );
+
+      
+
+      // Position
+      const center = new THREE.Vector3();
+      islandBoundingBox.getCenter(center); //keep, needed for islandSphere
+      islandBoundingBoxMesh.position.copy(center);
+
+      const islandSphere = new THREE.Sphere(center, size.x*0.4)
+
+
+      this.scene.add(islandBoundingBoxMesh);
+    
+      
     
       const guineaPigBoundingBox = new THREE.Box3().setFromObject(this.guineaPig);
 
-      if (!islandBoundingBox.intersectsBox(guineaPigBoundingBox)) {
-        console.log("outside the island")
 
+      if(islandSphere.intersectsBox(guineaPigBoundingBox)) {
+        //update position only if inside boundaries
+        this.guineaPig.position.x = this.newX
+        this.guineaPig.position.z = this.newZ
+      } else {
+          //goback
       }
+
+
+
+
+  
+      }
+
+      
+
 
   
     }
+
+}
+
+randomMovement() {
+   //random Movements
+   setTimeout(() => {
+    this.moveRandom();
+  }, 13000);
+}
+
+moveRandom() {
+  //if not stopped = keeps going
+  if(!this.isStopped) {
+   let x = Math.floor(Math.random()*4)
+   console.log(x)
+
+   if(x == 0){
+     this.isStopped = true
+     console.log("stopping")
+     this.deccelerate();
+     this.releaseSteer();
+     setTimeout(() => {
+       this.isStopped = false;
+     }, 10000); //waits 10 sec
+     
+   } else if(x == 1){
+     this.isStopped = false
+     for (let i = 0; i < 60; i++) {
+       this.accelerate();
+       console.log("walking")
+       
+     }
+
+   } else if(x == 2){
+     for (let i = 0; i < 60; i++) {
+      this.steerLeft()
+      this.accelerate(); 
+     }
+     this.isStopped = false
+ 
+   }else if(x == 3){
+     for (let i = 0; i < 60; i++) {
+     this.steerRight()
+     }
+     this.isStopped = false
+   } 
+  }
+   
 
 
 }
