@@ -18,7 +18,8 @@ let interactLabel
 let interactedObject
 let iterator = -1
 let ProcessingText = 'e'
-let rawfoodText = 'e'
+let smoke;
+let isSmoking = false
 
 let island
 let guineaPig = {}
@@ -35,6 +36,7 @@ const immovables = [];
 const object = new THREE.Mesh(new THREE.BoxGeometry(), new THREE.MeshBasicMaterial({ color: 0x00ff00 }));
 const cauldron = new THREE.Mesh(new THREE.BoxGeometry(), new THREE.MeshBasicMaterial({ color: 0x00ff00 }));
 const crops = new THREE.Mesh(new THREE.BoxGeometry(), new THREE.MeshBasicMaterial({ color: 0x00ff00 }));
+
 
 init()
 //animate() 
@@ -69,7 +71,7 @@ document.addEventListener('keydown',(event) => {
     if(key == 'e'){
       switch(interactedObject){
         case guineaPig.guineaPig:
-          console.log("e");
+          //console.log("e");
           guineaPig.nameLabel.visible = true;
           setTimeout(function(){guineaPig.nameLabel.visible = false}, 5000);
           break;
@@ -83,6 +85,8 @@ document.addEventListener('keydown',(event) => {
             interactables.pop(player.heldItem);
             scene.remove(player.heldItem);
             player.heldItem = null;
+            createsmoke();
+            isSmoking = true;
             ProcessingText = 'Processing...';
             interactDiv.textContent = ProcessingText;
             setTimeout(function(){
@@ -92,7 +96,11 @@ document.addEventListener('keydown',(event) => {
             }, 5000);
             setTimeout(function(){
               ProcessingText = 'E';
-              interactDiv.textContent = ProcessingText;}, 6000);
+              interactDiv.textContent = ProcessingText;
+              scene.remove(smoke);
+              smoke = undefined;
+              isSmoking = false;
+            }, 6000);
           }
           else{
             ProcessingText = 'You dont have the ingredients to use this!'
@@ -105,10 +113,10 @@ document.addEventListener('keydown',(event) => {
     if(key == 'f'){
       if(player.heldItem != null){
         if(rawFood != undefined){
-          insertToInteractables(rawFood,rawFood.rawFood);
+          insertToInteractables(rawFood.rawFood);
         }
         if(pommes != undefined){
-        insertToInteractables(pommes,pommes.pommes);
+          insertToInteractables(pommes.pommes);
         }
         player.heldItem.position.y = player.heldItemData[0];
         player.heldItem.rotation.copy(player.heldItemData[1]);
@@ -124,7 +132,6 @@ document.addEventListener('keydown',(event) => {
             }
           }
           if(isMovable){
-            console.log("rotation",interactables[iterator].rotation);
             player.heldItem = interactables[iterator];
             player.heldItemData = [interactables[iterator].position.y, new THREE.Euler(interactables[iterator].rotation.x,interactables[iterator].rotation.y,interactables[iterator].rotation.z)];
             camera.lookAt(interactedObject.position);
@@ -134,7 +141,7 @@ document.addEventListener('keydown',(event) => {
     }
   
 })
-function insertToInteractables(object, instance){
+function insertToInteractables(instance){
   var isMember = false;
   for(var i = 0; i <interactables.length;i++){
     if(interactables[i] == instance){
@@ -163,8 +170,8 @@ document.addEventListener('keyup',(event) => {
 function init(){
 
   scene = new THREE.Scene()
+  scene.fog = new THREE.FogExp2(0x000000, 0.0008);
   camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 100000 )
-
   renderer = new THREE.WebGLRenderer()
   renderer.setSize( window.innerWidth, window.innerHeight )
   document.body.appendChild( renderer.domElement )
@@ -236,15 +243,22 @@ function init(){
 }
 
 function OnLoadPommesLoaded(obj){
-  pommes.position = [0,0,0];
+  pommes.pommes.position.set(-19, 1, -30);
   pommes.pommes.name = "pommes";
-  player.heldItem = pommes.pommes;
-  player.heldItemData = [0.5,new THREE.Euler(0,0,0)];
-  camera.lookAt(pommes.pommes.position);
+  if(player.heldItem == null){
+    player.heldItem = pommes.pommes;
+    player.heldItemData = [0.5,new THREE.Euler(0,0,0)];
+    camera.lookAt(pommes.pommes.position);
+  }
+  else{
+    interactables.push(pommes.pommes);
+    pommes.pommes.position.y = 0.5;
+    pommes.pommes.rotation.copy(new THREE.Euler(0,0,0));
+  }
 }
 
 function OnLoadRawMeatLoaded(obj){
-  rawFood.position = [0,0,0];
+  rawFood.rawFood.position.set(0,0,0);
   rawFood.rawFood.name = "rawFood";
   player.heldItem = rawFood.rawFood;
   player.heldItemData = [0.5,new THREE.Euler(0,0,0)];
@@ -294,6 +308,9 @@ function animate() {
     player.animate()
 
   intercept()
+  if(isSmoking == true){
+    smokeAnimation();
+  } 
 
   if(player.heldItem != null){
     player.itemPickup();
@@ -322,11 +339,14 @@ function intercept(){
             break;
           default:
             interactLabel.position.set( 0, 0, 0 );
-            interactDiv.textContent = '';
+            interactDiv.textContent = 'f';
             break;
         }
+        if(interactables[i].name == "pommes"){
+          interactLabel.position.set( 1.8, 1, 1.8 );
+        }
       }
-      console.log("ProcessingText",ProcessingText);
+      //console.log("ProcessingText",ProcessingText);
       interactLabel.visible = true;
       interactIsActive = true;
       interactedObject =interactables[i];
@@ -342,4 +362,58 @@ function intercept(){
     }
     //console.log("interactIsActive", interactIsActive);
   }
+}
+
+function createsmoke() {
+	const geometry = new THREE.BufferGeometry();
+  const particleCount = 500;
+
+  const positions = new Float32Array(particleCount * 3);
+  const velocities = new Float32Array(particleCount * 3);
+
+  const texture = new THREE.TextureLoader().load('http://stemkoski.github.io/Three.js/images/smokeparticle.png');
+  const material = new THREE.PointsMaterial({
+    size: 4,
+    map: texture,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+    transparent: true,
+    color: 'rgb(30,30,30)'
+  });
+
+  for (let i = 0; i < particleCount; i++) {
+    const x = THREE.MathUtils.randInt(-20, -22);
+    const y = THREE.MathUtils.randInt(4, 6);
+    const z = THREE.MathUtils.randInt(-31, -33);
+
+    positions[i * 3] = x;
+    positions[i * 3 + 1] = y;
+    positions[i * 3 + 2] = z;
+
+    velocities[i * 3] = THREE.MathUtils.randFloat(0.0, 0.05) * Math.sign(positions[i]);
+    velocities[i * 3 + 1] = THREE.MathUtils.randFloat(0.01, 0.1);
+    velocities[i * 3 + 2] = THREE.MathUtils.randFloat(0.0, 0.1) * Math.sign(positions[i + 2]);
+
+  }
+
+  geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  geometry.setAttribute('velocity', new THREE.BufferAttribute(velocities, 3));
+
+  smoke = new THREE.Points(geometry, material);
+  scene.add(smoke);
+}
+
+function smokeAnimation() {
+	const positions = smoke.geometry.attributes.position.array;
+  const velocities = smoke.geometry.attributes.velocity.array;
+
+  for (let i = 0; i < positions.length; i += 3) {
+    positions[i] += velocities[i];
+    positions[i + 1] += velocities[i + 1];
+    positions[i + 2] += velocities[i + 2]
+
+    //if (positions[i + 1] >= 100) positions[i + 1] = 0;
+  }
+
+  smoke.geometry.attributes.position.needsUpdate = true;
 }
