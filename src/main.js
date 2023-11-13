@@ -6,6 +6,7 @@ import * as CSS2DRenderer from 'CSS2DRenderer'
 
 import { Player } from './player.js'
 import { RawFood } from './rawFood.js'
+import { Pommes } from './pommes.js'
 
 let scene
 let camera
@@ -16,12 +17,15 @@ let interactDiv
 let interactLabel
 let interactedObject
 let iterator = -1
+let ProcessingText = 'e'
+let rawfoodText = 'e'
 
 let island
 let guineaPig = {}
 let player
 let interactIsActive = false
 let rawFood = undefined
+let pommes
 
 const positionScreenSpace = new THREE.Vector3();
 const threshold = 0.2;
@@ -74,22 +78,37 @@ document.addEventListener('keydown',(event) => {
           rawFood = new RawFood(scene, OnLoadRawMeatLoaded);
           }
           break;
+        case cauldron:
+          if(player.heldItem != null && player.heldItem.name == "rawFood"){
+            interactables.pop(player.heldItem);
+            scene.remove(player.heldItem);
+            player.heldItem = null;
+            ProcessingText = 'Processing...';
+            interactDiv.textContent = ProcessingText;
+            setTimeout(function(){
+              pommes = new Pommes(scene,OnLoadPommesLoaded);
+              ProcessingText = 'Completed!';
+              interactDiv.textContent = ProcessingText;
+            }, 5000);
+            setTimeout(function(){
+              ProcessingText = 'E';
+              interactDiv.textContent = ProcessingText;}, 6000);
+          }
+          else{
+            ProcessingText = 'You dont have the ingredients to use this!'
+            setTimeout(function(){ProcessingText = 'E'}, 5000);
+          }
+          break;
       }
     }
   }
     if(key == 'f'){
       if(player.heldItem != null){
         if(rawFood != undefined){
-          var isMember = false;
-          for(var i = 0; i <interactables.length;i++){
-            if(interactables[i] == rawFood.rawFood){
-              isMember = true;
-              break;
-            }
-          }
-          if(isMember == false && player.heldItem == rawFood.rawFood){
-            interactables.push(rawFood.rawFood);
-          }
+          insertToInteractables(rawFood,rawFood.rawFood);
+        }
+        if(pommes != undefined){
+        insertToInteractables(pommes,pommes.pommes);
         }
         player.heldItem.position.y = player.heldItemData[0];
         player.heldItem.rotation.copy(player.heldItemData[1]);
@@ -115,6 +134,18 @@ document.addEventListener('keydown',(event) => {
     }
   
 })
+function insertToInteractables(object, instance){
+  var isMember = false;
+  for(var i = 0; i <interactables.length;i++){
+    if(interactables[i] == instance){
+      isMember = true;
+      break;
+    }
+  }
+  if(isMember == false && player.heldItem == instance){
+    interactables.push(instance);
+  }
+}
 
 document.addEventListener('keyup',(event) => {
   const key = event.key
@@ -179,7 +210,7 @@ function init(){
   interactDiv.style.backgroundColor = 'transparent';
 
   interactLabel = new CSS2DRenderer.CSS2DObject( interactDiv );
-  interactLabel.position.set( 0, 3, 0 );
+  interactLabel.position.set( 0, 0, 0 );
   interactLabel.center.set( 0.5, 0.5 );
 
   ///////////////////////////////////
@@ -204,8 +235,17 @@ function init(){
 
 }
 
+function OnLoadPommesLoaded(obj){
+  pommes.position = [0,0,0];
+  pommes.pommes.name = "pommes";
+  player.heldItem = pommes.pommes;
+  player.heldItemData = [0.5,new THREE.Euler(0,0,0)];
+  camera.lookAt(pommes.pommes.position);
+}
+
 function OnLoadRawMeatLoaded(obj){
   rawFood.position = [0,0,0];
+  rawFood.rawFood.name = "rawFood";
   player.heldItem = rawFood.rawFood;
   player.heldItemData = [0.5,new THREE.Euler(0,0,0)];
   camera.lookAt(rawFood.rawFood.position);
@@ -228,13 +268,13 @@ function OnLoadGuineaPigLoaded (obj){
   guineaPig.nameLabel.position.set( 0, 6, 0 );
   guineaPig.nameLabel.center.set( 0.5, 0.5 );
   guineaPig.nameLabel.visible = false;
-
-  console.log(guineaPig,  guineaPig.guineaPig);
+  //console.log(guineaPig,  guineaPig.guineaPig);
   guineaPig.addLabel( guineaPig.nameLabel );
-
   interactables.push(guineaPig.guineaPig);
-  console.log("guineapig", guineaPig)
+  //console.log("guineapig", guineaPig)
   
+  ///////////////////////////////////
+  //test object
   scene.add(object); 
   interactables.push(object);
   object.position.set(-1, 3, -5);
@@ -267,7 +307,26 @@ function intercept(){
     if(positionScreenSpace.length() < threshold && camera.position.distanceTo(interactables[i].position) < 10){
       if(interactLabel.parent != interactables[i]){
         interactables[i].add(interactLabel);
+        switch(i){
+          case 0:
+            interactDiv.textContent = ProcessingText;
+            interactLabel.position.set( 0, 0, 0 );
+            break;
+          case 1:
+            interactDiv.textContent = 'e';
+            interactLabel.position.set( 0, 0, 0 );
+            break;
+          case 2:
+            interactLabel.position.set( 0, 3, 0 );
+            interactDiv.textContent = 'e';
+            break;
+          default:
+            interactLabel.position.set( 0, 0, 0 );
+            interactDiv.textContent = '';
+            break;
+        }
       }
+      console.log("ProcessingText",ProcessingText);
       interactLabel.visible = true;
       interactIsActive = true;
       interactedObject =interactables[i];
