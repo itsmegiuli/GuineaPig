@@ -1,7 +1,6 @@
 import * as THREE from 'three'
-
-const pointer = new THREE.Vector2()
-const prevPointer = new THREE.Vector2()
+import { Interactable } from './interactable.js'
+import { Grabable } from './grabable.js'
 
 class Player{
 
@@ -17,6 +16,10 @@ class Player{
     this.offset.copy(cam.position)
     this.movementSpeed = 0.2
     this.rotationSpeed = 0.6
+    this.selectedInteractable = null
+
+    this.grabbedObject = null
+
     this.heldItem = null
     this.heldItemData = null
     this.load(window)
@@ -56,6 +59,14 @@ class Player{
   }
 
   update(deltaTime){
+    if (!this.isLoaded)
+      return
+
+    this.updatePlayerMovement()
+    this.updateGrabbedItem()
+  }
+
+  updatePlayerMovement() {
     // rotation
     this.cam.quaternion.copy(this.rotation)
 
@@ -78,8 +89,24 @@ class Player{
     this.cam.position.copy(newPos)
   }
 
+  updateGrabbedItem() {
+    if (this.grabbedObject == null)
+      return
+
+    const itemForward = new THREE.Vector3(0, 0, -1).applyQuaternion(this.cam.quaternion);
+    const itemRight = new THREE.Vector3(1, 0, 0).applyQuaternion(this.cam.quaternion);
+    const itemDown = new THREE.Vector3(0, -1, 0).applyQuaternion(this.cam.quaternion);
+    const newPosition = this.cam.position.clone().add(itemForward.multiplyScalar(3).add(itemRight.multiplyScalar(2)).add(itemDown.multiplyScalar(1)));
+    // undefined can happen when the model is just loaded for some reason
+    if (this.grabbedObject.object != undefined) {
+      this.grabbedObject.object.position.copy(newPosition)
+      this.grabbedObject.object.rotation.copy(this.cam.rotation)
+    }
+  }
+
   load(){
     window.addEventListener( 'pointermove', (event) => this.onPointerMove(event, this) )
+
     document.addEventListener('keydown',(event) => {
       const key = event.key
       if(key == 'w'){
@@ -92,6 +119,7 @@ class Player{
         this.moveDelta.x = -1
       } 
     })
+
     document.addEventListener('keyup',(event) => {
       const key = event.key
       if(key == 'w'){
@@ -108,16 +136,94 @@ class Player{
           this.moveDelta.x = 0
       } 
     })
+
+    document.addEventListener('keydown', (event) => {
+      const key = event.key
+      if (key != 'f')
+        return
+
+      this.interact()
+    })
+
     this.isLoaded = true
   }
+
+  checkInteractables(interactables) {
+    if (!this.isLoaded)
+      return
+
+    // De-/Activate interactables based on proximity
+    for(var i = 0; i< interactables.length; i++){
+      const obj = interactables[i]
+      const lengthSq = new THREE.Vector2(obj.collider.position.x - this.cam.position.x, obj.collider.position.z - this.cam.position.z).lengthSq()
+
+      if (lengthSq < 200 && !obj.isDisabled) {
+        obj.onActivate()
+      }
+      else {
+        obj.onDeactivate()
+      }
+    }
+
+    // De-/Select closest interactable based on raycasting
+    const raycaster = new THREE.Raycaster();
+    const forward = new THREE.Vector3();
+    this.cam.getWorldDirection(forward);
+    raycaster.set(this.cam.position, forward)
+    // Do raycasting with all active and non-disabled interactable objects
+    const intersections = raycaster.intersectObjects(interactables.filter(obj => obj.isActive && !obj.isDisabled).map(obj => obj.collider), true)
+
+    if (intersections.length > 0) {
+      // Find the interactable from its attatched collider
+      const nearest = interactables.find(o => o.collider == intersections[0].object)
+
+      // If it's the same one as before, do nothing
+      if (this.selectedInteractable == nearest)
+        return
+
+      // If it changed, then deselect previous one
+      if (this.selectedInteractable != null)
+        this.selectedInteractable.onDeselected()
+
+      // Select interactable
+      this.selectedInteractable = nearest
+      this.selectedInteractable.onSelected()
+    }
+    // Deselect if no interactable found
+    else if (this.selectedInteractable != null) {
+      this.selectedInteractable.onDeselected()
+      this.selectedInteractable = null
+    }
+
+  }
+
+  interact() {
+    if (this.selectedInteractable != null) {
+      this.selectedInteractable.onInteract(this)
+      this.selectedInteractable = null
+    }
+    else if (this.grabbedObject != null) {
+      this.dropObject()
+    }
+  }
   
-  itemPickup(){
-    const itemForward = new THREE.Vector3(0, 0, -1).applyQuaternion(this.cam.quaternion);
-    const itemRight = new THREE.Vector3(1, 0, 0).applyQuaternion(this.cam.quaternion);
-    const itemDown = new THREE.Vector3(0, -1, 0).applyQuaternion(this.cam.quaternion);
-    const newPosition = this.cam.position.clone().add(itemForward.multiplyScalar(3).add(itemRight.multiplyScalar(2)).add(itemDown.multiplyScalar(1)));
-    this.heldItem.position.copy(newPosition);
-    this.heldItem.rotation.copy(this.cam.rotation);
+  grabObject(object) {
+    if (!(object instanceof Grabable))
+      console.warn("The given object is not an instance of the Grabable-class. Are you sure you can grab it?")
+
+    if (this.grabbedObject != null)
+      return
+
+    this.grabbedObject = object
+    this.grabbedObject.disable(true)
+  }
+
+  dropObject() {
+    if (this.grabbedObject == null)
+      return
+
+      this.grabbedObject.onDropped(this)
+      this.grabbedObject = null
   }
 }
 

@@ -1,10 +1,14 @@
+import * as THREE from 'three'
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js'
+import { Grabable } from './grabable.js'
 
-class RawFood{
+class RawFood extends Grabable{
 
-  constructor(scene, _onLoadCallbackfunction){
+  constructor(interactables, scene, _onLoadCallbackfunction){
+    super(interactables, scene, new THREE.Vector3())
+
     this.isLoaded = false
-    this.rawFood
+    //this.rawFood
     this.scene = scene
     this.loadModel(_onLoadCallbackfunction)
   }
@@ -20,12 +24,12 @@ class RawFood{
             child.receiveShadow = true;
         }
       });
-      
-      this.rawFood = gltf.scene
-      this.rotation = this.rawFood.rotation.y
-      this.rawFood.position.y = 1
-      this.rawFood.scale.set(0.5, 0.7, 0.5)
-      this.scene.add(this.rawFood)
+
+      this.object = gltf.scene
+      this.rotation = this.object.rotation.y
+      this.object.position.y = 1
+      this.object.scale.set(0.5, 0.7, 0.5)
+      this.scene.add(this.object)
       this.isLoaded = true
 
       if (_onLoadCallbackfunction != undefined)
