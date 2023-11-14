@@ -55,7 +55,7 @@ class Player{
     player.rotation.copy(q)
   }
 
-  animate(){
+  update(deltaTime){
     // rotation
     this.cam.quaternion.copy(this.rotation)
 

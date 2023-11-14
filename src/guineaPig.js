@@ -6,111 +6,57 @@ import * as CSS2DRenderer from 'CSS2DRenderer'
 
 class GuineaPig{
 
-  constructor(scene, island, _onLoadCallbackfunction){
+  constructor(scene, _onLoadCallbackfunction){
     this.steeringType = "smooth"
     this.isLoaded = false
     this.guineaPig
     this.scene = scene
-    this.steer = 0
-    this.steerTo = 0
-    this.speed = 0
-    this.speedTo = 0
-    this.angle = 0
-    this.rotation
-    this.island = island
     this.nameDiv = null
     this.nameLabel = null
+    this.movementSpeed = 0.1
+    this.hopTargetPosition = new THREE.Vector3()
+    this.hopCounter = 0
+    this.hopNewRotation = new THREE.Quaternion()
     this.loadGuineaPig(_onLoadCallbackfunction)
-    
   }
-
-  accelerate(){
-    this.speedTo = 1
-  }
-
-  reverse(){
-    this.speedTo = -1
-  }
-
-  deccelerate(){
-    this.speedTo = 0
-  }
-
-  steerLeft(){
-    this.steerTo = -1
-  }
-
-  steerRight(){
-    this.steerTo = 1
-  }
-
-  releaseSteer(){
-    this.steerTo = 0
-  }
-
-  animate(){
-    // RUNNING
-    this.speed += (this.speedTo - this.speed) / 10 * 0.1
-    const dx = Math.sin(this.angle) * this.speed
-    const dz = Math.cos(this.angle) * this.speed
-
-    //updates the guinea pig position
-    this.guineaPig.position.x += dx
-    this.guineaPig.position.z += dz
-
-
-
-    // STEERING
-    this.angle += -this.steer * this.speed * 0.1
-    this.guineaPig.rotation.y = this.rotation + this.angle
-    if(this.steeringType == "linear"){
-      if(this.steer < this.steerTo){
-        this.steer += 0.1
-      }
-      if(this.steer > this.steerTo){
-        this.steer -= 0.1
-      }
-    }else{
-      this.steer += (this.steerTo - this.steer) / 10
-    }
-
-/*
-    if (this.guineaPig instanceof THREE.Object3D) {
-      console.log("yes")
-    } else {
-      console.log("no")
-    }
-
-    if (this.island.island instanceof THREE.Object3D) {
-      console.log("yes")
-    } else {
-      console.log("no")
-    }
-    */
-
-    if (this.guineaPig && this.island.island) {
-      const islandBoundingBox = new THREE.Box3().setFromObject(this.island.island);
-    
-      const guineaPigBoundingBox = new THREE.Box3().setFromObject(this.guineaPig);
-
-      if (!islandBoundingBox.intersectsBox(guineaPigBoundingBox)) {
-        console.log("outside the island")
-
-      }
-
   
+  update(deltaTime){
+
+    if (this.hopCounter <= 0) {
+      this.updateHop()
+    }
+    else {
+      const dir = new THREE.Vector3(
+        this.hopTargetPosition.x - this.guineaPig.position.x,
+        this.hopTargetPosition.y - this.guineaPig.position.y,
+        this.hopTargetPosition.z - this.guineaPig.position.z)
+
+      if (dir.lengthSq() > 1) {
+        dir.normalize()
+
+        this.guineaPig.quaternion.slerp(this.hopNewRotation, deltaTime)
+        this.guineaPig.position.add(dir.multiplyScalar(this.movementSpeed))
+      }
     }
 
+    this.hopCounter -= deltaTime
+  }
 
-}
+  updateHop() {
+    this.hopTargetPosition = new THREE.Vector3(THREE.MathUtils.randFloat(-100, 100), 0, THREE.MathUtils.randFloat(-100, 100))
+    this.hopCounter = THREE.MathUtils.randFloat(10, 15)
 
-addLabel (label) {
-  this.guineaPig.add(label);
-}
+    const oldRotation = (new THREE.Quaternion()).copy(this.guineaPig.quaternion)
+    this.guineaPig.lookAt(this.hopTargetPosition)
+    this.hopNewRotation.copy(this.guineaPig.quaternion)
+    this.guineaPig.setRotationFromQuaternion(oldRotation)
+  }
 
+  addLabel (label) {
+    this.guineaPig.add(label);
+  }
 
-
-loadGuineaPig(_onLoadCallbackfunction){
+  loadGuineaPig(_onLoadCallbackfunction){
     const loader = new GLTFLoader()
     loader.load('./assets/3d/bunny.glb', (gltf) => {
 
@@ -123,8 +69,6 @@ loadGuineaPig(_onLoadCallbackfunction){
       });
 
       this.guineaPig = gltf.scene
-      //this.guineaPig.rotation.y -= Math.PI/4
-      this.rotation = this.guineaPig.rotation.y
       this.guineaPig.scale.set(0.5, 0.5, 0.5)
       this.scene.add(this.guineaPig)
       this.isLoaded = true
@@ -133,8 +77,6 @@ loadGuineaPig(_onLoadCallbackfunction){
       _onLoadCallbackfunction(this);
 
     })
-
-
   }
 }
 

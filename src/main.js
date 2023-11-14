@@ -7,11 +7,13 @@ import * as CSS2DRenderer from 'CSS2DRenderer'
 import { Player } from './player.js'
 import { RawFood } from './rawFood.js'
 import { Pommes } from './pommes.js'
+import { FrameClock } from './frameClock.js'
 
 let scene
 let camera
 let renderer
 let labelRenderer
+let frameClock
 let directionalLight
 let interactDiv
 let interactLabel
@@ -58,15 +60,6 @@ window.addEventListener("click", async () => {
 
 document.addEventListener('keydown',(event) => {
   const key = event.key
-  if(key == 'w'){
-    guineaPig.accelerate()
-  }else if(key == 'a'){
-    guineaPig.steerLeft()
-  }else if(key == 's'){
-    guineaPig.reverse()
-  }else if(key == 'd'){
-    guineaPig.steerRight()
-  } 
   if (interactIsActive) {
     if(key == 'e'){
       switch(interactedObject){
@@ -154,19 +147,6 @@ function insertToInteractables(instance){
   }
 }
 
-document.addEventListener('keyup',(event) => {
-  const key = event.key
-  if(key == 'w'){
-    guineaPig.deccelerate()
-  }else if(key == 'a'){
-    guineaPig.releaseSteer()
-  }else if(key == 's'){
-    guineaPig.deccelerate()
-  }else if(key == 'd'){
-    guineaPig.releaseSteer()
-  } 
-})
-
 function init(){
 
   scene = new THREE.Scene()
@@ -191,8 +171,7 @@ function init(){
   ///////////////////////////////////
 
   island = new Island(scene/*,OnLoadIslandLoaded*/)
-  console.log("island")
-  guineaPig = new GuineaPig(scene, island, OnLoadGuineaPigLoaded)
+  guineaPig = new GuineaPig(scene, OnLoadGuineaPigLoaded)
   
   camera.position.z = 15
   camera.position.y = 7
@@ -239,6 +218,10 @@ function init(){
   immovables.push(crops);
   crops.name = "crops";
   crops.visible = false;
+
+  ///////////////////////////////////
+  //FrameClock
+  frameClock = new FrameClock()
 
 }
 
@@ -300,12 +283,15 @@ function animate() {
 	renderer.render( scene, camera )
   labelRenderer.render( scene, camera )
 
+  frameClock.update()
+  const deltaTime = frameClock.deltaTime
+
   if(guineaPig.isLoaded){
-    guineaPig.animate()
+    guineaPig.update(deltaTime)
   }
 
   if (player.isLoaded)
-    player.animate()
+    player.update(deltaTime)
 
   intercept()
   if(isSmoking == true){
