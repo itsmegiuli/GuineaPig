@@ -82,7 +82,7 @@ document.addEventListener('keydown',(event) => {
           break;
         case cauldron:
           if(player.heldItem != null && player.heldItem.name == "rawFood"){
-            interactables.pop(player.heldItem);
+            if(interactables.indexOf(player.heldItem) != -1) interactables.splice(interactables.indexOf(player.heldItem), 1);
             scene.remove(player.heldItem);
             player.heldItem = null;
             createsmoke();
@@ -289,9 +289,9 @@ function OnLoadGuineaPigLoaded (obj){
   
   ///////////////////////////////////
   //test object
-  scene.add(object); 
-  interactables.push(object);
-  object.position.set(-1, 3, -5);
+  //scene.add(object); 
+  //interactables.push(object);
+  //object.position.set(-1, 3, -5);
   animate()
 }
 
