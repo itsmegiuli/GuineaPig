@@ -17,11 +17,7 @@ class Player{
     this.movementSpeed = 0.2
     this.rotationSpeed = 0.6
     this.selectedInteractable = null
-
     this.grabbedObject = null
-
-    this.heldItem = null
-    this.heldItemData = null
     this.load(window)
   }
 

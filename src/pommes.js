@@ -4,16 +4,16 @@ import { Grabable } from './grabable.js'
 
 class Pommes extends Grabable{
 
-  constructor(interactables, scene, _onLoadCallbackfunction){
+  constructor(interactables, scene){
     super(interactables, scene, new THREE.Vector3())
 
     this.isLoaded = false
     //this.pommes
     this.scene = scene
-    this.loadModel(_onLoadCallbackfunction)
+    this.loadModel()
   }
 
-  loadModel(_onLoadCallbackfunction){
+  loadModel(){
     const loader = new GLTFLoader()
 
     loader.load('./assets/3d/french_fries.glb', (gltf) => {
@@ -31,9 +31,6 @@ class Pommes extends Grabable{
       this.object.scale.set(0.5, 0.7, 0.5)
       this.scene.add(this.object)
       this.isLoaded = true
-
-      if (_onLoadCallbackfunction != undefined)
-      _onLoadCallbackfunction(this);
     })
   }
 }

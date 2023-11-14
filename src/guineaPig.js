@@ -7,7 +7,7 @@ import { Grabable } from './grabable.js'
 
 class GuineaPig extends Grabable{
 
-  constructor(interactables, scene, _onLoadCallbackfunction){
+  constructor(interactables, scene){
     super(interactables, scene, new THREE.Vector3())
 
     this.isLoaded = false
@@ -19,7 +19,7 @@ class GuineaPig extends Grabable{
     this.hopTargetPosition = new THREE.Vector3()
     this.hopCounter = 0
     this.hopNewRotation = new THREE.Quaternion()
-    this.loadGuineaPig(_onLoadCallbackfunction)
+    this.loadGuineaPig()
   }
   
   update(deltaTime){
@@ -61,7 +61,7 @@ class GuineaPig extends Grabable{
     this.object.add(label);
   }
 
-  loadGuineaPig(_onLoadCallbackfunction){
+  loadGuineaPig(){
     const loader = new GLTFLoader()
     loader.load('./assets/3d/bunny.glb', (gltf) => {
 
@@ -77,10 +77,6 @@ class GuineaPig extends Grabable{
       this.object.scale.set(0.5, 0.5, 0.5)
       this.scene.add(this.object)
       this.isLoaded = true
-
-      if (_onLoadCallbackfunction != undefined)
-      _onLoadCallbackfunction(this);
-
     })
   }
 }
