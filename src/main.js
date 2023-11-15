@@ -67,7 +67,7 @@ function init(){
   // Island + skybox
   island = new Island(interactables, scene)
   // Moving animal
-  guineaPig = new GuineaPig(interactables, scene)
+  guineaPig = new GuineaPig(interactables, scene, island)
   // Player
   camera.position.z = 15
   camera.position.y = 7
