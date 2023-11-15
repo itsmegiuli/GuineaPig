@@ -58,6 +58,8 @@ class Player{
     if (!this.isLoaded)
       return
 
+    //console.log(this.cam.position)
+
     this.updatePlayerMovement()
     this.updateGrabbedItem()
   }

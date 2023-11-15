@@ -3,11 +3,11 @@ import { Interactable } from './interactable.js';
 import { RawFood } from './rawFood.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js'
 
-class InteractableCrop extends Interactable{
+class InteractablePumpkin extends Interactable{
   constructor(interactables, scene, position){
-    const geometry = new THREE.CylinderGeometry( 1.5, 1.5, 18);
+    const geometry = new THREE.DodecahedronGeometry(3)
     super(interactables, scene, geometry, position)
-    this.interactLabel.position.add(new THREE.Vector3(0, 4.5, 0))
+    this.interactLabel.position.add(new THREE.Vector3(0, 1.5, 0))
     this.initialScale = new THREE.Vector3()
     this.choppedScale = new THREE.Vector3()
     this.isHarvested = false
@@ -17,7 +17,7 @@ class InteractableCrop extends Interactable{
 
   loadModel(){
     const loader = new GLTFLoader()
-    loader.load('./assets/3d/crop_plant.glb', (gltf) => {
+    loader.load('./assets/3d/pumpkin_plant.glb', (gltf) => {
 
       gltf.scene.traverse(function (child) {
         if (child.isMesh) {
@@ -28,7 +28,9 @@ class InteractableCrop extends Interactable{
       });
 
       this.object = gltf.scene
-      this.object.scale.set(2, 2, 2)
+      
+      const multiplier = THREE.MathUtils.randFloat(1, 1.5)
+      this.object.scale.set(2, 2, 2).multiplyScalar(multiplier)
       this.object.position.copy(this.collider.position)
       this.object.rotation.y = THREE.MathUtils.randFloat(0, 2 * Math.PI)
       this.initialScale.copy(this.object.scale)
@@ -36,7 +38,7 @@ class InteractableCrop extends Interactable{
       this.isLoaded = true
     })
   }
-
+  
   update(deltaTime) {
     if (!this.isLoaded)
       return
@@ -70,9 +72,8 @@ class InteractableCrop extends Interactable{
       this.isHarvested = false
       this.disable(false)
     }, 6000);
-    
   }
 }
 
-export { InteractableCrop }
+export { InteractablePumpkin }
 

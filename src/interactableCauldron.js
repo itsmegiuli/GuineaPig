@@ -2,6 +2,8 @@ import * as THREE from 'three'
 import { Interactable } from './interactable.js';
 import { RawFood } from './rawFood.js';
 import { Pommes } from './pommes.js';
+import { Logs } from './logs.js';
+import { GuineaPig } from './guineaPig.js';
 
 class InteractableCauldron extends Interactable{
   constructor(interactables, scene, position){
@@ -21,7 +23,7 @@ class InteractableCauldron extends Interactable{
   onInteract(interactor) {
     super.onInteract(interactor)
 
-    if (interactor.grabbedObject != null && interactor.grabbedObject instanceof RawFood) {
+    if (interactor.grabbedObject instanceof RawFood) {
       this.foodAmount++
       const grabbedObject = interactor.grabbedObject
       interactor.dropObject()
@@ -29,16 +31,35 @@ class InteractableCauldron extends Interactable{
 
       if (this.foodAmount > 3) {
         this.foodAmount = 0
-        this.createsmoke()
+        this.createsmoke('rgb(30,30,30)')
         this.disable(true)
 
         const pommes = new Pommes(this.interactables, this.scene)
         pommes.onInteract(interactor)
       }
     }
+    else if (interactor.grabbedObject instanceof GuineaPig) {
+      const grabbedObject = interactor.grabbedObject
+      interactor.dropObject()
+      grabbedObject.dispose()
+      
+      this.foodAmount = 0
+      this.createsmoke('rgb(30,0,0)')
+      this.disable(true)
+    }
+    else if (interactor.grabbedObject instanceof Logs) {
+      const grabbedObject = interactor.grabbedObject
+      interactor.dropObject()
+      grabbedObject.dispose()
+      //light fire
+      //reset some timer
+      //if timer runs out, extinguish fire
+      //...
+      //profit
+    }
   }
 
-  createsmoke() {
+  createsmoke(colorAsString) {
     this.isSmoking = true;
 
     const geometry = new THREE.BufferGeometry();
@@ -47,14 +68,14 @@ class InteractableCauldron extends Interactable{
     const positions = new Float32Array(particleCount * 3);
     const velocities = new Float32Array(particleCount * 3);
   
-    const texture = new THREE.TextureLoader().load('http://stemkoski.github.io/Three.js/images/smokeparticle.png');
+    const texture = new THREE.TextureLoader().load('assets/2d/smokeparticle.png');
     const material = new THREE.PointsMaterial({
       size: 4,
       map: texture,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
       transparent: true,
-      color: 'rgb(30,30,30)'
+      color: colorAsString
     });
   
     for (let i = 0; i < particleCount; i++) {
