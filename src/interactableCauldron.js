@@ -10,20 +10,48 @@ class InteractableCauldron extends Interactable{
     const geometry = new THREE.CylinderGeometry( 3, 3, 15);
     super(interactables, scene, geometry, position)
     this.interactLabel.position.add(new THREE.Vector3(0, 3.5, 0))
-    this.smoke
+    this.explosionSfx
+    this.smokeSfx
+    this.smokingTime = 0
     this.foodAmount = 0
+    this.isExploding = false
     this.isSmoking = false
+
+    this.light = new THREE.PointLight( 0xffaa00, 1, 100 );
+    this.light.intensity = 100
+    this.light.position.set(-22, 1, -33);
+    this.scene.add(this.light)
+    this.light.visible = false
   }
 
-  update() {
-    if(this.isSmoking)
-      this.smokeAnimation()
+  onActivate() {
+    super.onActivate()
+    if (!this.isSmoking) {
+      this.interactDiv.textContent = "Needs logs to be lit"
+    }
+    else {
+      this.interactDiv.textContent = "Needs " + (4 - this.foodAmount) + " more ingredients"
+    }
+  }
+
+  update(deltaTime) {
+    if(this.isExploding)
+      this.updateExposionSFX()
+    
+    if (this.isSmoking)
+      this.updateSmokeSFX()
+
+    this.smokingTime = Math.max(0, this.smokingTime - deltaTime)
+
+    if (this.smokingTime <= 0 && this.isSmoking) {
+      this.isSmoking = false
+    }
   }
 
   onInteract(interactor) {
     super.onInteract(interactor)
 
-    if (interactor.grabbedObject instanceof RawFood) {
+    if (this.isSmoking && interactor.grabbedObject instanceof RawFood) {
       this.foodAmount++
       const grabbedObject = interactor.grabbedObject
       interactor.dropObject()
@@ -31,36 +59,98 @@ class InteractableCauldron extends Interactable{
 
       if (this.foodAmount > 3) {
         this.foodAmount = 0
-        this.createsmoke('rgb(30,30,30)')
+        this.createExplosion('rgb(30,30,30)')
         this.disable(true)
 
         const pommes = new Pommes(this.interactables, this.scene)
         pommes.onInteract(interactor)
       }
     }
-    else if (interactor.grabbedObject instanceof GuineaPig) {
+    else if (this.isSmoking && interactor.grabbedObject instanceof GuineaPig) {
       const grabbedObject = interactor.grabbedObject
       interactor.dropObject()
       grabbedObject.dispose()
       
       this.foodAmount = 0
-      this.createsmoke('rgb(30,0,0)')
+      this.createExplosion('rgb(30,0,0)')
       this.disable(true)
     }
     else if (interactor.grabbedObject instanceof Logs) {
       const grabbedObject = interactor.grabbedObject
       interactor.dropObject()
       grabbedObject.dispose()
-      //light fire
-      //reset some timer
-      //if timer runs out, extinguish fire
-      //...
-      //profit
+
+      this.smokingTime = Math.min(this.smokingTime + 20, 60)
+
+      if (!this.isSmoking) {
+        this.light.visible = true
+        this.createSmoke()
+      }
     }
+
   }
 
-  createsmoke(colorAsString) {
+  createSmoke() {
     this.isSmoking = true;
+
+    const geometry = new THREE.BufferGeometry();
+  
+    const positions = new Float32Array(3);
+    positions[0] = THREE.MathUtils.randFloat(-22,-20);
+    positions[1] = 5;
+    positions[2] = THREE.MathUtils.randFloat(-33, -31);
+
+    const velocities = new Float32Array(3);
+    velocities[0] = THREE.MathUtils.randFloat(0.002, 0.004);
+    velocities[1] = THREE.MathUtils.randFloat(0.01, 0.03);
+    velocities[2] = THREE.MathUtils.randFloat(0.002, 0.004);;
+
+    const texture = new THREE.TextureLoader().load('assets/2d/smokeparticle.png');
+    const material = new THREE.PointsMaterial({
+      size: 4,
+      map: texture,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+      transparent: true,
+      color: "white"
+    });
+  
+    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    geometry.setAttribute('velocity', new THREE.BufferAttribute(velocities, 3));
+  
+    this.smokeSfx = new THREE.Points(geometry, material);
+    this.scene.add(this.smokeSfx);
+
+    setTimeout(() => {
+      this.scene.remove(this.smokeSfx);
+      this.smokeSfx = undefined;
+      
+      // Loop if still smoking
+      if (this.isSmoking) {
+        this.createSmoke()
+      }
+      else {
+        this.foodAmount = 0
+        this.light.visible = false
+      }
+    }, 4000);
+  }
+  
+  updateSmokeSFX() {
+    const positions = this.smokeSfx.geometry.attributes.position.array;
+    const velocities = this.smokeSfx.geometry.attributes.velocity.array;
+  
+    for (let i = 0; i < positions.length; i += 3) {
+      positions[i] += velocities[i];
+      positions[i + 1] += velocities[i + 1];
+      positions[i + 2] += velocities[i + 2]
+    }
+  
+    this.smokeSfx.geometry.attributes.position.needsUpdate = true;
+  }
+
+  createExplosion(colorAsString) {
+    this.isExploding = true;
 
     const geometry = new THREE.BufferGeometry();
     const particleCount = 500;
@@ -96,22 +186,20 @@ class InteractableCauldron extends Interactable{
     geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
     geometry.setAttribute('velocity', new THREE.BufferAttribute(velocities, 3));
   
-    this.smoke = new THREE.Points(geometry, material);
-    this.scene.add(this.smoke);
+    this.explosionSfx = new THREE.Points(geometry, material);
+    this.scene.add(this.explosionSfx);
 
     setTimeout(() => {
-      //ProcessingText = 'E';
-      //interactDiv.textContent = ProcessingText;
-      this.scene.remove(this.smoke);
-      this.smoke = undefined;
-      this.isSmoking = false;
+      this.scene.remove(this.explosionSfx);
+      this.explosionSfx = undefined;
+      this.isExploding = false;
       this.disable(false)
     }, 6000);
   }
   
-  smokeAnimation() {
-    const positions = this.smoke.geometry.attributes.position.array;
-    const velocities = this.smoke.geometry.attributes.velocity.array;
+  updateExposionSFX() {
+    const positions = this.explosionSfx.geometry.attributes.position.array;
+    const velocities = this.explosionSfx.geometry.attributes.velocity.array;
   
     for (let i = 0; i < positions.length; i += 3) {
       positions[i] += velocities[i];
@@ -121,7 +209,7 @@ class InteractableCauldron extends Interactable{
       //if (positions[i + 1] >= 100) positions[i + 1] = 0;
     }
   
-    this.smoke.geometry.attributes.position.needsUpdate = true;
+    this.explosionSfx.geometry.attributes.position.needsUpdate = true;
   }
 }
 

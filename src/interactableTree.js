@@ -11,6 +11,7 @@ class InteractableTree extends Interactable{
     treeObject.getWorldPosition(pos)
     super(interactables, scene, geometry, pos)
     this.interactLabel.position.add(new THREE.Vector3(0, 4.5, 0))
+    this.interactDiv.textContent = "Press F to chop down"
     this.treeObject = treeObject
 
     this.initialScale = new THREE.Vector3().copy(treeObject.scale)

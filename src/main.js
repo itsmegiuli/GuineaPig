@@ -72,7 +72,7 @@ function init(){
   camera.position.z = 15
   camera.position.y = 7
   camera.position.x = -10
-  player = new Player(camera)
+  player = new Player(camera, island)
 }
 
 function update() {

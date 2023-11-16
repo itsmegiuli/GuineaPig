@@ -16,19 +16,20 @@ class RawFood extends Grabable{
   loadModel(){
     const loader = new GLTFLoader()
 
-    loader.load('./assets/3d/muscle.glb', (gltf) => {
+    loader.load('./assets/3d/sack.glb', (gltf) => {
       
       gltf.scene.traverse(function (child) {
         if (child.isMesh) {
             child.castShadow = true;
             child.receiveShadow = true;
+            child.material.color.set(Math.random() * 0xffffff)
         }
       });
 
       this.object = gltf.scene
       this.rotation = this.object.rotation.y
       this.object.position.y = 1
-      this.object.scale.set(0.5, 0.7, 0.5)
+      this.object.scale.set(7, 7, 7)
       this.scene.add(this.object)
       this.isLoaded = true
     })

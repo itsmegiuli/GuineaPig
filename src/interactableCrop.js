@@ -8,6 +8,7 @@ class InteractableCrop extends Interactable{
     const geometry = new THREE.CylinderGeometry( 1.5, 1.5, 18);
     super(interactables, scene, geometry, position)
     this.interactLabel.position.add(new THREE.Vector3(0, 4.5, 0))
+    this.interactDiv.textContent = "Press F to harvest"
     this.initialScale = new THREE.Vector3()
     this.choppedScale = new THREE.Vector3()
     this.isHarvested = false

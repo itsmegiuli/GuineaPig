@@ -3,9 +3,9 @@ import * as CSS2DRenderer from 'CSS2DRenderer'
 
 class Interactable{
   static ACTIVE_COLOR = 0xffffaa
-  static ACTIVE_OPACITY = 0.15
+  static ACTIVE_OPACITY = 0.05
   static SELECTED_COLOR = 0xccccff
-  static SELECTED_OPACITY = 0.5
+  static SELECTED_OPACITY = 0.15
 
   constructor(interactables, scene, geometry, position){
     //Flags & References
@@ -43,6 +43,7 @@ class Interactable{
    */
   dispose() {
     this.scene.remove(this.interactLabel)
+    this.collider.remove(this.interactLabel)
     this.scene.remove(this.collider)
     const index = this.interactables.indexOf(this)
     this.interactables.splice(index, 1)

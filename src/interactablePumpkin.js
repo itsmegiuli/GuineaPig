@@ -8,6 +8,7 @@ class InteractablePumpkin extends Interactable{
     const geometry = new THREE.DodecahedronGeometry(3)
     super(interactables, scene, geometry, position)
     this.interactLabel.position.add(new THREE.Vector3(0, 1.5, 0))
+    this.interactDiv.textContent = "Press F to harvest"
     this.initialScale = new THREE.Vector3()
     this.choppedScale = new THREE.Vector3()
     this.isHarvested = false

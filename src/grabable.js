@@ -4,6 +4,7 @@ import { Interactable } from './interactable.js';
 class Grabable extends Interactable{
   constructor(interactables, scene, offset){
     super(interactables, scene, new THREE.DodecahedronGeometry(3), offset)
+    this.interactDiv.textContent = "Press F to grab"
     this.object
   }
 
