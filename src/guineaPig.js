@@ -93,7 +93,7 @@ class GuineaPig extends Grabable{
   }
   
   update(deltaTime){
-    //console.log(this.island)
+  
     if (!this.isLoaded || !this.island.island) {
       return
     }
@@ -149,7 +149,7 @@ class GuineaPig extends Grabable{
     const intersects = raycaster.intersectObject(this.island.island);
 
     if (intersects.length > 0) { //inside the island
-      //console.log("inside")
+      
 
       this.lastValidPosition.copy(this.object.position); //save position to "go back inside"
 
@@ -168,9 +168,12 @@ class GuineaPig extends Grabable{
           this.object.quaternion.slerp(this.hopNewRotation, deltaTime);
           let newPosition = this.object.position.add(dir.multiplyScalar(this.movementSpeed));
 
+          
           // Check if the new position is inside the island
           const islandBoundingBox = new THREE.Box3().setFromObject(this.island.island);
-          islandBoundingBox.expandByScalar(-10) //buffer zone not working?
+          //islandBoundingBox.expandByScalar(-0.9) //buffer zone not working
+      
+          
           if (islandBoundingBox.containsPoint(newPosition)) {
             this.object.position.copy(newPosition);
             this.collider.position.copy(newPosition);
@@ -180,9 +183,7 @@ class GuineaPig extends Grabable{
 
       this.hopCounter -= deltaTime;
     } else {
-      // The guinea pig is outside the island
-      //console.log("outside");
-      
+      // The guinea pig is outside the island     
       // Move the guinea pig back to the last valid position inside the island
       this.object.position.copy(this.lastValidPosition);
       this.collider.position.copy(this.lastValidPosition);
@@ -219,39 +220,7 @@ class GuineaPig extends Grabable{
     })
   }
 
-  boundarybox() {
-    //console.log(this.island.island)
-
-    const islandBoundingBox = new THREE.Box3().setFromObject(this.island.island);
-    const size = new THREE.Vector3();
-    islandBoundingBox.getSize(size);
-    
-    // Mesh to visually check bounding box //delete
-    const islandBoundingBoxMesh = new THREE.Mesh(
-    new THREE.SphereGeometry(size.x*0.4,32,32),
-    new THREE.MeshBasicMaterial({ color: 0xff0000, wireframe: true })
-    );
-
-    // Position
-    const center = new THREE.Vector3();
-    islandBoundingBox.getCenter(center); //keep, needed for islandSphere
-    islandBoundingBoxMesh.position.copy(center);
-
-    const islandSphere = new THREE.Sphere(center, size.x*0.4)
-
-    this.scene.add(islandBoundingBoxMesh);
-  
-    const guineaPigBoundingBox = new THREE.Box3().setFromObject(this.guineaPig);
-
-    if(islandSphere.intersectsBox(guineaPigBoundingBox)) {
-      //update position only if inside boundaries
-      this.guineaPig.position.x = this.newX
-      this.guineaPig.position.z = this.newZ
-    }
-
-    //console.log(islandSphere)
-  }
-
+ 
   createExplosion(colorAsString) {
     const geometry = new THREE.BufferGeometry();
     const particleCount = 500;
